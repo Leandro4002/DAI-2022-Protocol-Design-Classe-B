@@ -7,7 +7,7 @@ The type ids are separated into different categories.
 * Even numbers : communication from server to client
 * Negative numbers : Used to communicate errors
 
-> This API needs the `Type de message.` ids to be stored in a 64 bits integer and the Note that the typeIds must be stored in a 64 bits integer. It also requires the support for accents.
+> This API needs support for accents for th `Type de message.` field.
 
 Here is the official `Type de message.`s for the CALCUL (Calcul d'Algèbre Linéaire, Continue, Unilatéral et Limitié) API:
 * `Bonjour.`

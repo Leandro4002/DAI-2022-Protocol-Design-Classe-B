@@ -36,6 +36,7 @@ public class Server {
         try (ServerSocket serverSocket = new ServerSocket(4242)) {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
+                LOG.info("new connexion from " + clientSocket.getInetAddress());
                 // Create new thread to handle this client
                 ServerWorker worker = new ServerWorker(clientSocket);
                 Thread thread = new Thread(worker);

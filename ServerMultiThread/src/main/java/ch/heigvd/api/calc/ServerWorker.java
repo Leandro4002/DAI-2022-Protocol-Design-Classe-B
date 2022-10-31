@@ -5,8 +5,6 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -16,6 +14,21 @@ import org.json.simple.parser.ParseException;
  */
 public class ServerWorker implements Runnable {
     private Socket clientSocket;
+
+    public static double runCalculation(String calculationToDo) {
+        /*char[] legalCharacters = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+'};
+        for (int i = 0; i < calculationToDo.length(); ++i) {
+            for (calculationToDo.charAt(i)) {
+                input = input.replace('a','1');
+                input = input.replace('b','2');
+            }
+        }
+
+        calculationToDo.replace(" ", "");
+        calculationToDo.replace(" ", "");
+*/
+        return 0;
+    }
 
     private final static Logger LOG = Logger.getLogger(ServerWorker.class.getName());
 
@@ -40,7 +53,7 @@ public class ServerWorker implements Runnable {
      */
     @Override
     public void run() {
-
+        LOG.info("Started new worker for client ip" + clientSocket.getInetAddress());
         /* TODO: implement the handling of a client connection according to the specification.
          *   The server has to do the following:
          *   - initialize the dialog according to the specification (for example send the list
@@ -54,44 +67,50 @@ public class ServerWorker implements Runnable {
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream());
             String line;
-            String userInput = "";
-            JSONObject jo = new JSONObject();
-
             boolean isConnexionOver = false;
+            JSONObject jo;
 
             while (!isConnexionOver) {
-                while((line = in.readLine()) != null) {
-                    userInput += line;
-                }
-
-                if (!userInput.isEmpty()) {
+                if((line = in.readLine()) != null) {
+                    LOG.info("Reading message \"" + line + "\"");
                     JSONParser parser = new JSONParser();
 
                     try{
-                        Object obj = parser.parse(userInput);
-                        JSONObject jsonObj = (JSONObject)obj;
+                        JSONObject jsonObj = (JSONObject)parser.parse(line);
 
                         String messageType = (String)jsonObj.get("Type de message.");
                         switch(messageType) {
                             case "Bonjour.":
-                                out.println("{\"Type de message\":\"\"}");
+                                jo = new JSONObject();
+                                jo.put("Type de message.", "Comment ça va ?");
+                                JSONArray ja = new JSONArray();
+                                ja.add("+");
+                                jo.put("Opérandes supportées.", ja);
+                                out.println(jo.toJSONString());
+                                out.flush();
                                 break;
                             case "Au revoir.":
                                 isConnexionOver = true;
                                 break;
+                            case "Calcul, s'il te plaît.":
+                                String calculationToDo = (String)jsonObj.get("Calcul à faire.");
+                                break;
                             default:
-                                out.println("Je ne connais pas le type de message \"" + messageType +"\"");
+                                jo = new JSONObject();
+                                jo.put("Type de message.", "J'ai un problème.");
+                                jo.put("Explication de mon problème.", "Je ne connais pas le type de message \"" + messageType + "\"");
+                                out.println(jo.toJSONString());
                                 out.flush();
                         }
 
-                        LOG.info("Received a " + messageType);
-
-                        LOG.info("Received user data \n" + jsonObj.toJSONString());
                     } catch(ParseException pe) {
-                        System.out.println("PARSE EXCEPTION : position=" + pe.getPosition());
+                        jo = new JSONObject();
+                        jo.put("Type de message.", "J'ai un problème.");
+                        jo.put("Explication de mon problème.", "Vous avez incorrectement formaté votre message JSON. J'exige vos excuses.");
+                        out.println(jo.toJSONString());
+                        out.flush();
+                        LOG.warning("PARSE EXCEPTION : position=" + pe.getPosition());
                     }
-
-                    userInput = "";
                 }
             }
 
